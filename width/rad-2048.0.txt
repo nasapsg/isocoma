@@ -1,0 +1,28 @@
+# ------------------------------------------------------------------------
+# Radiance spectrum
+# NASA-GSFC Planetary Spectrum Generator (PSG) (Villanueva et al. 2018)
+# Synthesized on Sat Feb 20 17:51:21 2021
+# ------------------------------------------------------------------------
+# Cometary spectrum synthesized with CEM (Cometary Emission Model, Villanueva et al. 2004, 2011)
+# Molecules considered: H2O,OH
+# Molecular sources: HIT[1],HIT[13]
+# Molecular abundances: 100,100
+# Molecular abundance units: pct,pct
+# Molecular lifetimes: 77000.0,2.4e4 1.6e5
+# Molecular column densities [m-2] (area[m2]:3.2942e+12): 5.5294E+19,3.4505E+18
+# Haser filling factors f(x): 2.3656E-02,7.1041E-04
+# ------------------------------------------------------------------------
+# Doppler velocities [km/s] (vobs,vrot+vorb,vwidth,vrfl,vstr): 0.00000,0.00000,0.00000,0.00000,0.00000
+# Spectral unit: Wavelength [um]
+# Radiance unit: Spectral irradiance [Jy]
+# Wave/freq Total Comet H2O OH
+1.000000000e+00  0.0000000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+1.100000000e+00  0.0000000e+00  0.00000e+00  0.00000e+00  0.00000e+00
+1.200000000e+00  7.1496614e+01  7.14966e+01  7.14966e+01  1.15537e-62
+1.300000000e+00  1.6193356e+02  1.61934e+02  1.61934e+02  1.75682e-08
+1.400000000e+00  4.5290327e+04  4.52903e+04  4.12821e+04  4.00827e+03
+1.500000000e+00  1.7219721e+03  1.72197e+03  1.53854e+03  1.83428e+02
+1.600000000e+00  5.4417351e-01  5.44174e-01  5.44174e-01  7.07122e-13
+1.700000000e+00  2.5885662e-02  2.58857e-02  2.58857e-02  3.68361e-30
+1.800000000e+00  4.0493294e+03  4.04933e+03  4.04933e+03  2.68439e-54
+1.900000000e+00  7.0568259e+04  7.05683e+04  7.05683e+04  1.40708e-76
