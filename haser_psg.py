@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 # Modules for computing number of molecules inside a beam
 # --------------------------------------------------------
 # Calculation number of molecules in fov
-def molbeam(qgas, fov=1000.0, rh=1.0, ptau=0.0, dtau=7.7e4, offset=0, distance=1e10):
+def molbeam(qgas, fov=1000.0, rh=1.0, ptau=0.0, dtau=7.7e4, offset=0, distance=1e10, diameter=7.0):
     # qgas: molecular production rate [molecules/s]
     # fov: diameter of field-of-view [km]
     # rh: heliocentric distance [AU]
@@ -22,6 +22,7 @@ def molbeam(qgas, fov=1000.0, rh=1.0, ptau=0.0, dtau=7.7e4, offset=0, distance=1
     # dtau: Molecular lifetime of daughter at RH=1AU [seconds]
     # offset: offset of beam from center of comet [km]
     # distance: distance between observer and center of comet [km]
+    # diameter: comet's diameter [km]
     vgas = 0.800     # Expansion velocity at 1AU [km/s, 0.8 is typical]
     evgas= -0.5      # Dependence of velocity with RH [-0.5, empirical]
     etau = 2.0       # Dependence of lifetimes with RH [2 typical]
@@ -50,6 +51,9 @@ def molbeam(qgas, fov=1000.0, rh=1.0, ptau=0.0, dtau=7.7e4, offset=0, distance=1
         fx0 = calculatefx(distance*2, plam, dlam)
         fx = fx*(1.0 - (1.0-fx0)/2.0)
     #Endif
+
+    # Correct if beam smaller than diameter
+    if fov<diameter: fx = fx*pow(fov/diameter,2.0);
 
     Nfov = Ntot * fx  # Number of molecules in the FOV
     return Nfov
@@ -86,6 +90,7 @@ def calculatefx(fov=1000.0, plam=0.0, dlam=7.7e4):
 Qgas = 1e29                        # Cometary gas activity [s-1]
 rh = 1.0                           # Heliocentric distance [AU]
 distance = 100000.0                # Distance to comet [km]
+diameter = 7.0                     # Comet's diameter [km]
 tgas1 = [1.0, 0.0,   7.7e4]        # Parameters for gas1: abundance(0 to 1.0), parent_tau[s], daugther_tau[s]
 tgas2 = [1.0, 2.4e4, 1.6e5]        # Parameters for gas2: abundance(0 to 1.0), parent_tau[s], daugther_tau[s]
 
@@ -95,7 +100,7 @@ f = open("config_base.txt", "r"); cfg = f.readlines(); f.close()
 updatePSG = False
 
 # Iterate across FOV sizes
-bmin = 1.0   # Minimum FOV size [km]
+bmin = 10.0  # Minimum FOV size [km]
 bmax = 1e5   # Maximum FOV size [km]
 b = bmin; fovs=[]; f1=[]; f2=[]; p1=[]; p2=[]; areas=[]
 while b<bmax:
@@ -125,7 +130,7 @@ while b<bmax:
 #End FOV loop
 
 # Iterate across offsets
-fov  = 1.0   # Size of FOV [km]
+fov  = 10.0  # Size of FOV [km]
 bmin = 0.1   # Minimum offset [km]
 bmax = 1e6   # Maximum offset [km]
 afov = np.pi*(fov*1e3/2)**2 # Area of fov
