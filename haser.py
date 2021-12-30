@@ -35,9 +35,9 @@ def molbeam(qgas, fov=1000.0, rh=1.0, ptau=7.7e4, dtau=0.0, offset=0, distance=1
     # Calculate effect of offset
     if (offset-fov/2.0)>diameter/2.0:
         # Try to estimate offset by computing concentric rings
-        fx0 = calculatefx(offset*2, plam, dlam)
+        fx0 = calculatefx(offset*2-fov, plam, dlam)
         fx1 = calculatefx(offset*2+fov, plam, dlam)
-        afx = np.pi*((offset+fov/2.0)**2 - offset**2)
+        afx = np.pi*((offset+fov/2.0)**2 - (offset-fov/2.0)**2)
         afov= np.pi*(fov/2.0)**2
         fx  = (fx1-fx0)*(afov/afx)
         fxh = fx*0.5 # f(x) from surface to outer space
@@ -46,7 +46,11 @@ def molbeam(qgas, fov=1000.0, rh=1.0, ptau=7.7e4, dtau=0.0, offset=0, distance=1
         if fov<diameter:
             fx = fn*(fov/diameter)**2; fxh=fx
         else:
-            fx = calculatefx(fov, plam, dlam); fxh = fx*0.5; fx -= fn;
+            fx  = calculatefx(fov+offset, plam, dlam);
+            afx = np.pi*((offset+fov)/2.0)**2
+            afov= np.pi*(fov/2.0)**2
+            fx *= afov/afx
+            fxh = fx*0.5; fx -= fn;
         #Endelse
     #Endelse
 
