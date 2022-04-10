@@ -1,7 +1,7 @@
 # ---------------------------------------------------
 # non-LTE solver for cometary atmospheres - Time dependent solution
 # NASA-GSFC Planetary Spectrum Generator (PSG, Villanueva et al. 2022)
-# Based on methods as introduced in Chin & Weaver 1984, Bockelee-Morvan 1987, Biver 1997, Bensch and Bergin 2004, Zakharov 2007
+# Based on methods as introduced in Chin & Weaver 1984, Bockelee-Morvan 1987, Biver 1997, Bensch and Bergin 2004, Zakharov et al. 2007
 # Last updated April 2022
 # ---------------------------------------------------
 import os
@@ -12,14 +12,12 @@ from scipy import special
 
 mol  = 'h2o'            # Base molecule name
 Xgas = 1.0              # Abundance ratio
-mgas = 18.01528         # Molar mass of modelled gas [g/mol]
-Bgas = 1.042e-5         # Photodissociation rate (at rh=1 AU) of modelled gas [s-1]
 sym  = 1                # Desired symmetry (-1:all syms, 0:only para, 1:only ortho)
 
 Tkin = 50.0             # Neutral gas kinetic temperature [K]
 Qatm = 1e29             # Production rate [s-1] of ambient gas
-matm = 18.01528         # Molar mass of ambient gas [g/mol]
-Batm = 1.042e-5         # Photodissociation rate (at rh=1 AU) of ambient gas [s-1]
+matm = 18.0             # Molar mass of ambient gas [g/mol]
+Batm = 1.0/77000.0      # Photodissociation rate (at rh=1 AU) of ambient gas [s-1]
 rh = 1.0                # Helioncentric distance [AU]
 vexp = 850.0            # Velocity [m/s]
 
@@ -41,63 +39,22 @@ ME = 9.10938e-31        # Mass of an electron [Kg]
 QE = 1.602176634e-19    # Elementary charge [C]
 E0 = 8.8541878128e-12   # Vacuum permittivity [F m-1] or [s4 A2 kg-1 m-3]
 
-# Neutral gas component
-lrad = np.arange(nrad)*(np.log(rmax) - np.log(rmin))/(nrad-1) + np.log(rmin)
-rad  = np.exp(lrad)                   # Distance from nucleus [m]
-natm = Qatm/(4.0*np.pi*rad*rad*vexp)  # Atmosphere gas density without photodissocation decay [m-3]
-ngas = Xgas*natm*np.exp(-Bgas*rad/(vexp*rh*rh)) # Modelled gas density [m-3]
-natm = natm*np.exp(-Batm*rad/(vexp*rh*rh)) # Ambient gas density [m-3]
-Zrad = np.zeros(nrad)                 # Partition function at Tgas across coma
-vkin = np.sqrt(8.0*KB*1e3*AV*Tkin/np.pi*(1.0/mgas + 1.0/matm)) # Mean relative velocity of gas and atmosphere [m/s]
-
-# Electron properties
-Rcs = 1.125e6*xre*(Qatm/1e29)**0.75  # Contact surface [m]
-Rrec = 3.2e6*xre*(Qatm/1e29)**0.50   # Recombination surface [m]
-Te = np.zeros(nrad)                  # Electron temperature [K]
-ne = np.zeros(nrad)                  # Electron density [m-3]
-ve = np.zeros(nrad)                  # Mean velocity of electrons [m/s]
-for i in range(nrad):
-    if rad[i]<Rcs: Te[i] = Tkin
-    elif rad[i]<=2*Rcs: Te[i] = Tkin + (Temax-Tkin)*((rad[i]/Rcs) - 1.0)
-    else: Te[i] = Temax
-    krec = 7e-13*(300.0/Te[i])**0.5
-    ne[i] = xne*(Qatm*kion/(vexp*krec*rh*rh))**0.5
-    ne[i]*= (Te[i]/300)**0.15
-    ne[i]*= (Rrec/(rad[i]*rad[i]))
-    ne[i]*= (1.0 - np.exp(-rad[i]/Rrec))
-    ne[i]+= 5e6/(rh*rh)
-    ve[i] = np.sqrt(8.0*KB*Te[i]/(np.pi*ME))
-#Endfor
-
-lg=plt.plot(rad/1e3, ngas, label='Gas')
-le=plt.plot(rad/1e3, ne, label='Electrons')
-plt.xscale('log')
-plt.yscale('log')
-plt.xlim([rmin/1e3,rmax/1e3])
-plt.ylim([1e6,1e18])
-plt.ylabel('Density [m-3]')
-plt.xlabel('Distance from nucleus [km]')
-plt.title('%s Q:%.1e s-1, X:%.4f, Rh:%.1f AU, v:%.2f km/s' % (mol.upper(), Qatm, Xgas, rh, vexp/1e3))
-ax = plt.gca().twinx()
-ax.set_ylim([1e0,1e5])
-tg=ax.plot(rad/1e3, Tkin+Te*0,':',color='black',label='Tgas')
-te=ax.plot(rad/1e3, Te, '-.',color='black',label='Te')
-ax.set_yscale('log')
-ax.set_ylabel('Temperature [K]')
-lns = lg+le+tg+te
-labs = [l.get_label() for l in lns]
-ax.legend(lns, labs)
-plt.tight_layout()
-plt.savefig('nlte_profile.png')
-plt.close()
-
 # Read molecular parameters
 # Download if not locally available
+ncoll=0; mgas=matm; Bgas=Batm; Bgas2=0.0
 if not os.path.exists('%s.txt' % mol): os.system('curl -s https://psg.gsfc.nasa.gov/data/linelists/gsfc/rot/%s.txt --output %s.txt' % (mol,mol))
-fr = open('%s.txt' % mol); lines = fr.readlines(); fr.close(); ncoll=0
+fr = open('%s.txt' % mol); lines = fr.readlines(); fr.close();
 for l in range(len(lines)):
     line = lines[l].strip()
     if len(line)==0: continue
+    if line[: 7]=='# Mass:':
+        mgas=float(line[7:])
+    #Endif
+    if line[:11]=='# Lifetime:':
+        st = line[11:].split()
+        Bgas=1.0/float(st[0])
+        if len(st)>1: Bgas2=1.0/float(st[1])
+    #Endif
     if line[:9]=='# Levels:':
         mnlev = int(line[9:]); l+=1; j=0; Qt=0.0
         if mnlev>lmax: nlev=lmax
@@ -162,6 +119,7 @@ for l in range(len(lines)):
         temps = [float(x) for x in st]
     #Endif
     if line[:8]=='# Rates:':
+        vkin = np.sqrt(8.0*KB*1e3*AV*Tkin/np.pi*(1.0/mgas + 1.0/matm)) # Mean relative velocity of gas and atmosphere [m/s]
         ncoll = int(line[8:]); l+=1
         for i in range(ncoll):
             st = lines[l].split(); l+=1
@@ -174,6 +132,64 @@ for l in range(len(lines)):
         #Endfor
     #Endif
 #Endfor
+
+# Neutral gas component
+Bgas /= rh*rh; Bgas2 /= rh*rh;
+lrad = np.arange(nrad)*(np.log(rmax) - np.log(rmin))/(nrad-1) + np.log(rmin)
+rad  = np.exp(lrad)                   # Distance from nucleus [m]
+natm = Qatm/(4.0*np.pi*rad*rad*vexp)  # Atmosphere gas density without photodissocation decay [m-3]
+lam0 = vexp*rh*rh/Bgas
+if Bgas2>0:
+    lam1 = vexp*rh*rh/Bgas2
+    photoscl = (lam1/(lam0-lam1))*(np.exp(-rad/lam0)-np.exp(-rad/lam1))
+else:
+    photoscl = np.exp(-rad/lam0)
+#Endelse
+ngas = Xgas*natm*photoscl
+natm = natm*np.exp(-Batm*rad/(vexp*rh*rh)) # Ambient gas density [m-3]
+Zrad = np.zeros(nrad)                 # Partition function at Tgas across coma
+
+# Electron properties
+Rcs = 1.125e6*xre*(Qatm/1e29)**0.75  # Contact surface [m]
+Rrec = 3.2e6*xre*(Qatm/1e29)**0.50   # Recombination surface [m]
+Te = np.zeros(nrad)                  # Electron temperature [K]
+ne = np.zeros(nrad)                  # Electron density [m-3]
+ve = np.zeros(nrad)                  # Mean velocity of electrons [m/s]
+for i in range(nrad):
+    if rad[i]<Rcs: Te[i] = Tkin
+    elif rad[i]<=2*Rcs: Te[i] = Tkin + (Temax-Tkin)*((rad[i]/Rcs) - 1.0)
+    else: Te[i] = Temax
+    krec = 7e-13*(300.0/Te[i])**0.5
+    ne[i] = xne*(Qatm*kion/(vexp*krec*rh*rh))**0.5
+    ne[i]*= (Te[i]/300)**0.15
+    ne[i]*= (Rrec/(rad[i]*rad[i]))
+    ne[i]*= (1.0 - np.exp(-rad[i]/Rrec))
+    ne[i]+= 5e6/(rh*rh)
+    ve[i] = np.sqrt(8.0*KB*Te[i]/(np.pi*ME))
+#Endfor
+
+lg=plt.plot(rad/1e3, ngas, label='Gas')
+le=plt.plot(rad/1e3, ne, label='Electrons')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlim([rmin/1e3,rmax/1e3])
+plt.ylim([1e6,1e18])
+plt.ylabel('Density [m-3]')
+plt.xlabel('Distance from nucleus [km]')
+plt.title('%s Q:%.1e s-1, X:%.4f, Rh:%.1f AU, v:%.2f km/s' % (mol.upper(), Qatm, Xgas, rh, vexp/1e3))
+ax = plt.gca().twinx()
+ax.set_ylim([1e0,1e5])
+tg=ax.plot(rad/1e3, Tkin+Te*0,':',color='black',label='Tgas')
+te=ax.plot(rad/1e3, Te, '-.',color='black',label='Te')
+ax.set_yscale('log')
+ax.set_ylabel('Temperature [K]')
+lns = lg+le+tg+te
+labs = [l.get_label() for l in lns]
+ax.legend(lns, labs)
+plt.tight_layout()
+plt.savefig('nlte_profile.png')
+plt.close()
+
 
 # Calculate radially varying parameters
 for r in range(nrad):
@@ -207,9 +223,8 @@ for r in range(nrad):
 # Define system of differential equations
 def deriv(t, N):
     rt  = vexp*t                       # Distance [m]
-    lrt = np.log(vexp*t)               # log of distance [m]
-    na  = Qatm/(4.0*np.pi*rt*rt*vexp)  # Atmosphere gas density without photodissocation decay [m-3]
-    ng  = Xgas*na*np.exp(-Bgas*rt/(vexp*rh*rh)) # Modelled gas density [m-3]
+    lrt = np.log(rt)                   # log of distance [m]
+    ng  = np.interp(lrt, lrad, ngas)   # Gas density [m-3]
     Cer = np.zeros([nlev,nlev])        # Electron collissional excitation rate [s-1] at t
     Cnr = np.zeros([nlev,nlev])        # Neutral collissional de-excitation rate [s-1] at t
     Ar  = np.zeros([nlev,nlev])        # Corrected Einstein A coefficients [s-1] for escape probability
@@ -252,7 +267,7 @@ print('Number of evaluations of the Jacobian (NJEV): ', soln.njev)
 print('Number of LU decompositions (NLU): ', soln.nlu)
 
 # Save populations
-fr = open('nlte.txt', 'w')
+fr = open('nlte.dat', 'w')
 for i in range(len(soln.t)):
     str = '%e ' % (soln.t[i]*vexp/1e3)
     for j in range(nlev): str = '%s %e' % (str, soln.y[j,i])
