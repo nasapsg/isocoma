@@ -128,7 +128,7 @@ for l in range(len(lines)):
             if iu>=nlev or il>=nlev: continue
             vals = [float(x) for x in st[2:]]
             rct = np.interp(Tkin, temps, vals)
-            C[iu,il] = np.sqrt(matm/2.0)*rct*1e-6/vkin # Scale them by mass of
+            C[iu,il] = np.sqrt(matm/2.0)*rct*1e-6/vkin # Scale H2 rates by mass of atmosphere
         #Endfor
     #Endif
 #Endfor
