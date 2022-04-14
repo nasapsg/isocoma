@@ -18,7 +18,7 @@ Tkin = 50.0             # Neutral gas kinetic temperature [K]
 Qatm = 1e29             # Production rate [s-1] of ambient gas
 matm = 18.0             # Molar mass of ambient gas [g/mol]
 Batm = 1.0/77000.0      # Photodissociation rate (at rh=1 AU) of ambient gas [s-1]
-rh = 1.0                # Helioncentric distance [AU]
+rh = 1.0                # Heliocentric distance [AU]
 vexp = 850.0            # Velocity [m/s]
 
 lmax = 7                # Maximum number of levels to consider
@@ -62,11 +62,11 @@ for l in range(len(lines)):
         ilev = np.zeros([mnlev],dtype=np.int)+lmax*2
         levs = np.zeros([3,nlev])
         Nth  = np.zeros([nlev])                  # Thermal population at each level
-        A  = np.zeros([nlev,nlev])               # Einstein A-coefficients for spontaneous emission [s−1]
+        A  = np.zeros([nlev,nlev])               # Einstein A-coefficients for spontaneous emission [s-1]
         BJ = np.zeros([nlev,nlev])               # CMB rate [s-1], from Bji for photon absorption [J-1 s-2 cm3] times JCMB [J s cm-3]
         v  = np.zeros([nlev,nlev])               # Transition frequency [cm-1]
         G  = np.zeros([nlev,nlev])               # Effective pumping rate [s-1]
-        C  = np.zeros([nlev,nlev])               # Neutral collissional rate [cm3 s-1]
+        C  = np.zeros([nlev,nlev])               # Neutral collissional cross section [m2]
         Ce = np.zeros([nlev,nlev,nrad])          # Electron collissional excitation rate [s-1]
         Cn = np.zeros([nlev,nlev,nrad])          # Neutral collissional de-excitation rate [s-1]
         for i in range(mnlev):
@@ -128,7 +128,7 @@ for l in range(len(lines)):
             if iu>=nlev or il>=nlev: continue
             vals = [float(x) for x in st[2:]]
             rct = np.interp(Tkin, temps, vals)
-            C[iu,il] = rct*1e-6/vkin
+            C[iu,il] = np.sqrt(matm/2.0)*rct*1e-6/vkin # Scale them by mass of
         #Endfor
     #Endif
 #Endfor
@@ -142,12 +142,12 @@ lam0 = vexp*rh*rh/Bgas
 if Bgas2>0:
     lam1 = vexp*rh*rh/Bgas2
     photoscl = (lam1/(lam0-lam1))*(np.exp(-rad/lam0)-np.exp(-rad/lam1))
+    print(lam0, lam1)
 else:
     photoscl = np.exp(-rad/lam0)
 #Endelse
 ngas = Xgas*natm*photoscl
 natm = natm*np.exp(-Batm*rad/(vexp*rh*rh)) # Ambient gas density [m-3]
-Zrad = np.zeros(nrad)                 # Partition function at Tgas across coma
 
 # Electron properties
 Rcs = 1.125e6*xre*(Qatm/1e29)**0.75  # Contact surface [m]
@@ -169,6 +169,7 @@ for i in range(nrad):
 #Endfor
 
 lg=plt.plot(rad/1e3, ngas, label='Gas')
+la=plt.plot(rad/1e3, natm, label='Atm')
 le=plt.plot(rad/1e3, ne, label='Electrons')
 plt.xscale('log')
 plt.yscale('log')
@@ -183,13 +184,12 @@ tg=ax.plot(rad/1e3, Tkin+Te*0,':',color='black',label='Tgas')
 te=ax.plot(rad/1e3, Te, '-.',color='black',label='Te')
 ax.set_yscale('log')
 ax.set_ylabel('Temperature [K]')
-lns = lg+le+tg+te
+lns = lg+la+le+tg+te
 labs = [l.get_label() for l in lns]
 ax.legend(lns, labs)
 plt.tight_layout()
-plt.savefig('nlte_profile.png')
+plt.savefig('nlte_profile.png', dpi=300)
 plt.close()
-
 
 # Calculate radially varying parameters
 for r in range(nrad):
@@ -204,7 +204,7 @@ for r in range(nrad):
             elif C[i,j]>0:
                 dE = levs[0,i] - levs[0,j]
                 Cn[i,j,r] = natm[r]*vkin*C[i,j]
-                Cn[j,i,r] = levs[1,i]/levs[1,j]*Cn[i,j,r]*np.exp(-dE*C2/Tkin) # Van de Tak 2007 (eq 6)
+                Cn[j,i,r] = levs[1,i]/levs[1,j]*Cn[i,j,r]*np.exp(-dE*C2/Tkin)
             #Endfor
 
             # Collissions with electrons
@@ -244,10 +244,9 @@ def deriv(t, N):
                 K0 = special.k0(tau/2.0) # Modified Bessel functions of the second kind
                 K1 = special.k1(tau/2.0) # Modified Bessel functions of the second kind
                 beta = (2.0/(3.0*tau)) - np.exp(-tau/2.0)/3.0*(K1 + tau*(K0 - K1))
-            elif tau>=0.0:
+            elif tau>-1e-4:
                 beta = 1.0
             else:
-                tau = -tau
                 beta = (1.0 - np.exp(-tau))/tau
             #Endelse
             Ar[j,i] = A[j,i]*beta
@@ -288,5 +287,5 @@ plt.title('%s Q:%.1e s-1, X:%.4f, Rh:%.1f AU, v:%.2f km/s' % (mol.upper(), Qatm,
 plt.ylabel('Relative level population')
 plt.xlabel('Distance from nucleus [km]')
 plt.tight_layout()
-plt.savefig('nlte.png')
+plt.savefig('nlte.png', dpi=300)
 plt.show()
