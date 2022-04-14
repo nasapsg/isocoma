@@ -119,7 +119,6 @@ for l in range(len(lines)):
         temps = [float(x) for x in st]
     #Endif
     if line[:8]=='# Rates:':
-        vkin = np.sqrt(8.0*KB*1e3*AV*Tkin/np.pi*(1.0/mgas + 1.0/matm)) # Mean relative velocity of gas and atmosphere [m/s]
         ncoll = int(line[8:]); l+=1
         for i in range(ncoll):
             st = lines[l].split(); l+=1
@@ -128,7 +127,7 @@ for l in range(len(lines)):
             if iu>=nlev or il>=nlev: continue
             vals = [float(x) for x in st[2:]]
             rct = np.interp(Tkin, temps, vals)
-            C[iu,il] = np.sqrt(matm/2.0)*rct*1e-6/vkin # Scale H2 rates by mass of atmosphere
+            C[iu,il] = np.sqrt(matm/2.0)*rct*1e-6 # Scale H2 rates by mass of atmosphere
         #Endfor
     #Endif
 #Endfor
@@ -192,6 +191,7 @@ plt.savefig('nlte_profile.png', dpi=300)
 plt.close()
 
 # Calculate radially varying parameters
+vkin = np.sqrt(8.0*KB*1e3*AV*Tkin/np.pi*(1.0/mgas + 1.0/matm)) # Mean relative velocity of gas and atmosphere [m/s]
 for r in range(nrad):
     for i in range(nlev):
         for j in range(nlev):
@@ -203,7 +203,7 @@ for r in range(nrad):
                 Cn[j,i,r] = tc*Nth[i]
             elif C[i,j]>0:
                 dE = levs[0,i] - levs[0,j]
-                Cn[i,j,r] = natm[r]*vkin*C[i,j]
+                Cn[i,j,r] = natm[r]*C[i,j]
                 Cn[j,i,r] = levs[1,i]/levs[1,j]*Cn[i,j,r]*np.exp(-dE*C2/Tkin)
             #Endfor
 
