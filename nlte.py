@@ -17,7 +17,7 @@ sym  = 1                # Desired symmetry (-1:all syms, 0:only para, 1:only ort
 Tkin = 50.0             # Neutral gas kinetic temperature [K]
 Qatm = 1e29             # Production rate [s-1] of ambient gas
 matm = 18.0             # Molar mass of ambient gas [g/mol]
-Cscl = 10.0             # Scaler of the X-H2 collisional rates
+Cscl = 9.0              # Scaler of the X-H2 collisional rates
 Batm = 1.0/77000.0      # Photodissociation rate (at rh=1 AU) of ambient gas [s-1]
 rh = 1.0                # Heliocentric distance [AU]
 vexp = 850.0            # Velocity [m/s]
