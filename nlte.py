@@ -17,6 +17,7 @@ sym  = 1                # Desired symmetry (-1:all syms, 0:only para, 1:only ort
 Tkin = 50.0             # Neutral gas kinetic temperature [K]
 Qatm = 1e29             # Production rate [s-1] of ambient gas
 matm = 18.0             # Molar mass of ambient gas [g/mol]
+Cscl = 10.0             # Scaler of the X-H2 collisional rates
 Batm = 1.0/77000.0      # Photodissociation rate (at rh=1 AU) of ambient gas [s-1]
 rh = 1.0                # Heliocentric distance [AU]
 vexp = 850.0            # Velocity [m/s]
@@ -120,6 +121,7 @@ for l in range(len(lines)):
     #Endif
     if line[:8]=='# Rates:':
         ncoll = int(line[8:]); l+=1
+        Ct  = np.zeros([nlev])
         for i in range(ncoll):
             st = lines[l].split(); l+=1
             iu = ilev[int(st[0])-1]
@@ -127,7 +129,8 @@ for l in range(len(lines)):
             if iu>=nlev or il>=nlev: continue
             vals = [float(x) for x in st[2:]]
             rct = np.interp(Tkin, temps, vals)
-            C[iu,il] = np.sqrt(matm/2.0)*rct*1e-6 # Scale H2 rates by mass of atmosphere
+            C[iu,il] = Cscl*rct*1e-6 # Scale H2 rates
+            Ct[iu] += C[iu,il]
         #Endfor
     #Endif
 #Endfor
