@@ -62,14 +62,14 @@ for l in range(len(lines)):
         else: nlev = mnlev
         ilev = np.zeros([mnlev],dtype=np.int)+lmax*2
         levs = np.zeros([3,nlev])
-        Nth  = np.zeros([nlev])                  # Thermal population at each level
-        A  = np.zeros([nlev,nlev])               # Einstein A-coefficients for spontaneous emission [s-1]
-        BJ = np.zeros([nlev,nlev])               # CMB rate [s-1], from Bji for photon absorption [J-1 s-2 cm3] times JCMB [J s cm-3]
-        v  = np.zeros([nlev,nlev])               # Transition frequency [cm-1]
-        G  = np.zeros([nlev,nlev])               # Effective pumping rate [s-1]
-        C  = np.zeros([nlev,nlev])               # Neutral collissional cross section [m2]
-        Ce = np.zeros([nlev,nlev,nrad])          # Electron collissional excitation rate [s-1]
-        Cn = np.zeros([nlev,nlev,nrad])          # Neutral collissional de-excitation rate [s-1]
+        Nth  = np.zeros([nlev])           # Thermal population at each level
+        A  = np.zeros([nlev,nlev])        # Einstein A-coefficients for spontaneous emission [s-1]
+        BJ = np.zeros([nlev,nlev])        # CMB rate [s-1], from Bji for photon absorption [J-1 s-2 cm3] times JCMB [J s cm-3]
+        v  = np.zeros([nlev,nlev])        # Transition frequency [cm-1]
+        G  = np.zeros([nlev,nlev])        # Effective pumping rate [s-1]
+        C  = np.zeros([nlev,nlev])        # Neutral collissional de-excitation rates [m3 s-1]
+        Ce = np.zeros([nlev,nlev,nrad])   # Electron collissional rates [s-1]
+        Cn = np.zeros([nlev,nlev,nrad])   # Neutral collissional rates [s-1]
         for i in range(mnlev):
             st = lines[l].split(); l+=1
             El = float(st[1])
@@ -121,7 +121,6 @@ for l in range(len(lines)):
     #Endif
     if line[:8]=='# Rates:':
         ncoll = int(line[8:]); l+=1
-        Ct  = np.zeros([nlev])
         for i in range(ncoll):
             st = lines[l].split(); l+=1
             iu = ilev[int(st[0])-1]
@@ -130,7 +129,6 @@ for l in range(len(lines)):
             vals = [float(x) for x in st[2:]]
             rct = np.interp(Tkin, temps, vals)
             C[iu,il] = Cscl*rct*1e-6 # Scale H2 rates
-            Ct[iu] += C[iu,il]
         #Endfor
     #Endif
 #Endfor
