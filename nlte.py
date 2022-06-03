@@ -29,7 +29,7 @@ Temax = 1e4             # Maximum temperature of electrons [K]
 kion = 4.1e-7           # Photoionization rate (at rh=1 AU) [s-1]
 rmin = 1e4              # Minimum distance [m]
 rmax = 1e9              # Maximum distance [m]
-nrad = 400              # Number of shells
+nrad = 200              # Number of shells
 
 HP = 6.62606896e-34     # Planck's constant [J s]
 KB = 1.3806505e-23      # Boltzmann's constant [J/K] or [m2 kg / (s2 K)]
@@ -134,20 +134,19 @@ for l in range(len(lines)):
 #Endfor
 
 # Neutral gas component
-Bgas /= rh*rh; Bgas2 /= rh*rh;
+Bgas /= rh*rh; Bgas2 /= rh*rh; Batm /= rh*rh
 lrad = np.arange(nrad)*(np.log(rmax) - np.log(rmin))/(nrad-1) + np.log(rmin)
 rad  = np.exp(lrad)                   # Distance from nucleus [m]
 natm = Qatm/(4.0*np.pi*rad*rad*vexp)  # Atmosphere gas density without photodissocation decay [m-3]
-lam0 = vexp*rh*rh/Bgas
+lam0 = vexp/Bgas
 if Bgas2>0:
-    lam1 = vexp*rh*rh/Bgas2
+    lam1 = vexp/Bgas2
     photoscl = (lam1/(lam0-lam1))*(np.exp(-rad/lam0)-np.exp(-rad/lam1))
-    print(lam0, lam1)
 else:
     photoscl = np.exp(-rad/lam0)
 #Endelse
 ngas = Xgas*natm*photoscl
-natm = natm*np.exp(-Batm*rad/(vexp*rh*rh)) # Ambient gas density [m-3]
+natm = natm*np.exp(-Batm*rad/vexp) # Ambient gas density [m-3]
 
 # Electron properties
 Rcs = 1.125e6*xre*(Qatm/1e29)**0.75  # Contact surface [m]
@@ -258,10 +257,11 @@ def deriv(t, N):
     return dNdt
 #Enddef
 
+
 # Solve differential equation
 tmin = rmin/vexp; tmax = rmax/vexp
 N0 = Nth
-soln = solve_ivp(deriv, [tmin,tmax], N0, method='Radau', t_eval = rad/vexp)
+soln = solve_ivp(deriv, [tmin,tmax], N0, method='LSODA', t_eval = rad/vexp)
 print('Number of forward evaluations (NFEV): ', soln.nfev)
 print('Number of evaluations of the Jacobian (NJEV): ', soln.njev)
 print('Number of LU decompositions (NLU): ', soln.nlu)
