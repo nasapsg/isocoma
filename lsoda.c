@@ -80,7 +80,7 @@ static int     *ipvt;
 // -----------------------------------------------------------------------
 // lsoda(): Core function of the livermore solver for ordinary differential equations
 // -----------------------------------------------------------------------
-// This is the march 30, 1987 version of LSODA livermore solver for ordinary differential equations,
+// This is the core function of the LSODA livermore solver for ordinary differential equations,
 // with automatic method switching for stiff and nonstiff problems.
 // this version is in double precision.
 //
@@ -2317,7 +2317,7 @@ void dgefa(double **a, int n, int *ipvt, int *info) {
 // -----------------------------------------------------------------
 // Example program
 // fex() is the derivative function, while main is needed if called alone
-// Please see that the inputs start at index:1, yet calculations are with index;0
+// Please see that the inputs start at index:1, yet calculations are with index:0
 // to compile 'gcc lsoda.c -o lsoda'
 // -----------------------------------------------------------------
 static void fex(double t, double *y, double *ydot)
