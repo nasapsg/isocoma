@@ -1369,9 +1369,9 @@ static void cfode(int meth) {
   // meth = 2.
   pc[1] = 1.;
   rq1fac = 1.;
-	// The pc array will contain the coefficients of the polynomial
-	// p(x) = (x+1)*(x+2)*...*(x+nq)
-	// Initially, p(x) = 1.
+  // The pc array will contain the coefficients of the polynomial
+  // p(x) = (x+1)*(x+2)*...*(x+nq)
+  // Initially, p(x) = 1.
   for (nq = 1; nq <= 5; nq++) {
     fnq = (double) nq;
     nqp1 = nq + 1;
@@ -1400,16 +1400,16 @@ static void cfode(int meth) {
 static void scaleh(double *rh, double *pdh) {
   double          r;
   int             j, i;
-	// If h is being changed, the h ratio rh is checked against rmax, hmin,
-	// and hmxi, and the yh array is rescaled.  ialth is set to l = nq + 1
-	// to prevent a change of h for that many steps, unless forced by a
-	// convergence or error test failure.
+  // If h is being changed, the h ratio rh is checked against rmax, hmin,
+  // and hmxi, and the yh array is rescaled.  ialth is set to l = nq + 1
+  // to prevent a change of h for that many steps, unless forced by a
+  // convergence or error test failure.
   *rh = min(*rh, rmax);
   *rh = *rh / max(1., fabs(h) * hmxi * *rh);
 
-	// If meth = 1, also restrict the new step size by the stability region.
-	// If this reduces h, set irflag to 1 so that if there are roundoff
-	// problems later, we can assume that is the cause of the trouble.
+  // If meth = 1, also restrict the new step size by the stability region.
+  // If this reduces h, set irflag to 1 so that if there are roundoff
+  // problems later, we can assume that is the cause of the trouble.
   if (meth == 1) {
     irflag = 0;
     *pdh = max(fabs(h) * pdlast, 0.000001);
@@ -1534,15 +1534,15 @@ static double fnorm(int n, double **a, double *w) {
 //            2 : corrector cannot converge, failure flag.
 // -----------------------------------------------------
 static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
-	           double *del, double *delp, double *told,
+             double *del, double *delp, double *told,
              int *ncf, double *rh, int *m) {
   int             i;
   double          rm, rate, dcon;
 
-	// Up to maxcor corrector iterations are taken.  A convergence test is
-	// made on the r.m.s. norm of each correction, weighted by the error
-	// weight vector ewt.  The sum of the corrections is accumulated in the
-	// vector acor[i].  The yh array is not altered in the corrector loop.
+  // Up to maxcor corrector iterations are taken.  A convergence test is
+  // made on the r.m.s. norm of each correction, weighted by the error
+  // weight vector ewt.  The sum of the corrections is accumulated in the
+  // vector acor[i].  The yh array is not altered in the corrector loop.
   *m = 0;
   *corflag = 0;
   rate = 0.;
@@ -1553,9 +1553,9 @@ static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
   (*f) (tn, y + 1, savf + 1);
   nfe++;
 
-	// If indicated, the matrix P = I - h * el[1] * J is reevaluated and
-	// preprocessed before starting the corrector iteration.  ipup is set
-	// to 0 as an indicator that this has been done.
+  // If indicated, the matrix P = I - h * el[1] * J is reevaluated and
+  // preprocessed before starting the corrector iteration.  ipup is set
+  // to 0 as an indicator that this has been done.
   while (1) {
     if (*m == 0) {
       if (ipup > 0) {
@@ -1574,8 +1574,8 @@ static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
     }    // end if ( *m == 0 )
 
     if (miter == 0) {
-	    // In case of functional iteration, update y directly from
-	    // the result of the last function evaluation.
+      // In case of functional iteration, update y directly from
+      // the result of the last function evaluation.
       yp1 = yh[2];
       for (i = 1; i <= n; i++) {
         savf[i] = h * savf[i] - yp1[i];
@@ -1604,16 +1604,16 @@ static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
       }
     }
 
-		// Test for convergence.  If *m > 0, an estimate of the convergence
-		// rate constant is stored in crate, and this is used in the test.
-		//
-		// We first check for a change of iterates that is the size of
-		// roundoff error.  If this occurs, the iteration has converged, and a
-		// new rate estimate is not formed.
-		// In all other cases, force at least two iterations to estimate a
-		// local Lipschitz constant estimate for Adams method.
-		// On convergence, form pdest = local maximum Lipschitz constant
-		// estimate.  pdlast is the most recent nonzero estimate.
+    // Test for convergence.  If *m > 0, an estimate of the convergence
+    // rate constant is stored in crate, and this is used in the test.
+    //
+    // We first check for a change of iterates that is the size of
+    // roundoff error.  If this occurs, the iteration has converged, and a
+    // new rate estimate is not formed.
+    // In all other cases, force at least two iterations to estimate a
+    // local Lipschitz constant estimate for Adams method.
+    // On convergence, form pdest = local maximum Lipschitz constant
+    // estimate.  pdlast is the most recent nonzero estimate.
     if (*del <= 100. * pnorm * ETA) break;
     if (*m != 0 || meth != 1) {
       if (*m != 0) {
@@ -1632,11 +1632,11 @@ static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
       }
     }
 
-		// The corrector iteration failed to converge.
-		// If miter != 0 and the Jacobian is out of date, prja is called for
-		// the next try.   Otherwise the yh array is retracted to its values
-		// before prediction, and h is reduced, if possible.  If h cannot be
-		// reduced or mxncf failures have occured, exit with corflag = 2.
+    // The corrector iteration failed to converge.
+    // If miter != 0 and the Jacobian is out of date, prja is called for
+    // the next try.   Otherwise the yh array is retracted to its values
+    // before prediction, and h is reduced, if possible.  If h cannot be
+    // reduced or mxncf failures have occured, exit with corflag = 2.
     (*m)++;
     if (*m == maxcor || (*m >= 2 && *del > 2. * *delp)) {
       if (miter == 0 || jcur == 1) {
@@ -1645,7 +1645,7 @@ static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
       }
       ipup = miter;
 
-			// Restart corrector if Jacobian is recomputed.
+      // Restart corrector if Jacobian is recomputed.
       *m = 0;
       rate = 0.;
       *del = 0.;
@@ -1656,7 +1656,7 @@ static void correction(int neq, double *y, lsodaf f, int *corflag, double pnorm,
       nfe++;
 
     } else {
-			// Iterate corrector.
+      // Iterate corrector.
       *delp = *del;
       (*f) (tn, y + 1, savf + 1);
       nfe++;
@@ -1773,14 +1773,14 @@ static void methodswitch(double dsm, double pnorm, double *pdh, double *rh) {
     return;
   }
 
-	// We are currently using a bdf method, considering switching to Adams.
-	// Compute the step size we could have (ideally) used on this step,
-	// with the current (bdf) method, and also that for the Adams.
-	// If nq > mxordn, we consider changing to order mxordn on switching.
-	// Compare the two step sizes to decide whether to switch.
-	// The step size advantage must be at least 5/ratio = 1 to switch.
-	// If the step size for Adams would be so small as to cause
-	// roundoff pollution, we stay with bdf.
+  // We are currently using a bdf method, considering switching to Adams.
+  // Compute the step size we could have (ideally) used on this step,
+  // with the current (bdf) method, and also that for the Adams.
+  // If nq > mxordn, we consider changing to order mxordn on switching.
+  // Compare the two step sizes to decide whether to switch.
+  // The step size advantage must be at least 5/ratio = 1 to switch.
+  // If the step size for Adams would be so small as to cause
+  // roundoff pollution, we stay with bdf.
   exsm = 1. / (double) l;
   if (mxordn < nq) {
     nqm1 = mxordn;
@@ -1922,9 +1922,9 @@ static void orderswitch(double *rhup, double dsm, double *pdh, double *rh, int *
   }
   if (kflag <= -2) *rh = min(*rh, 0.2);
 
-	// If there is a change of order, reset nq, l, and the coefficients.
-	// In any case h is reset according to rh and the yh array is rescaled.
-	// Then exit or redo the step.
+  // If there is a change of order, reset nq, l, and the coefficients.
+  // In any case h is reset according to rh and the yh array is rescaled.
+  // Then exit or redo the step.
   if (newq == nq) {
     *orderflag = 1;
     return;
